@@ -124,6 +124,7 @@ class barrys_twitter {
                 <p><strong>Connection OK - Hello ' . ($account->name ? $account->name : $account->screen_name) . '</strong></p>
             </div>
                     ';
+                    $this->_update_json();
                 }
             }
         }
@@ -184,6 +185,8 @@ jQuery(document).ready(function() {
                 </td>
             </tr>
 ';
+                // force an update
+                $this->_update_json();
                 break;
             case 2:
                 // we got keys build and redirect
