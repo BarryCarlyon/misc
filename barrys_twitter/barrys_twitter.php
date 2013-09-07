@@ -136,6 +136,7 @@ jQuery(document).ready(function() {
             tweet: jQuery('#tweet').val()
         }
 
+        jQuery('#tweet').val('');
         jQuery('#tweet_response').html('Sending');
 
         jQuery.post(ajaxurl, data, function(resp) {
@@ -239,7 +240,7 @@ jQuery(document).ready(function() {
 
     // ajax
     function send_tweet() {
-        $tweet = $_POST['tweet'];
+        $tweet = stripslashes($_POST['tweet']);
 
         if ($this->_settings->getState() == 3) {
             $connection = $this->_settings->connection;
@@ -258,7 +259,13 @@ jQuery(document).ready(function() {
 
         die();
     }
+    // end
 
+    // shell/cron
+    function update_json() {
+        $json_target = wp_upload_dir();
+
+    }
 }
 
 new barrys_twitter;
