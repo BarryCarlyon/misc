@@ -62,6 +62,8 @@ class barrys_twitter {
             $token = $_GET['oauth_token'];
             $verify = $_GET['oauth_verifier'];
 
+            $this->_settings->temp = false;
+
             if ($this->_settings->oauth_token != $token) {
                 echo '
             <div id="setting-error-settings_updated" class="updated settings-error">
@@ -69,17 +71,69 @@ class barrys_twitter {
             </div>
                 ';
             } else {
+                // build from temp
+                $connection = new TwitterOAuth(
+                    $this->_settings->consumer_key,
+                    $this->_settings->consumer_secret,
+                    $this->_settings->oauth_token,
+                    $this->_settings->oauth_token_secret
+                );
 
+                // exchange tokens
+                $token_credentials = $connection->getAccessToken($_REQUEST['oauth_verifier']);
+
+                // save
+/*
+                $this->_settings->oauth_token = $token_credentials['oauth_token'];
+                $this->_settings->oauth_token_secret = $token_credentials['oauth_token_secret'];
+                $this->_settings->temp = false;
+                $this->_settings->saveOptions();
+*/
+
+                // build
+                $connection = new TwitterOAuth(
+                    $this->_settings->consumer_key,
+                    $this->_settings->consumer_secret,
+                    $token_credentials['oauth_token'],
+                    $token_credentials['oauth_token_secret']
+                );
+                $account = $connection->get('account/verify_credentials');
+
+                if (isset($account->errors)) {
+                    if ($account->errors[0]->code == 215 || $account->errors[0]->code == 89) {
+                        echo '
+            <div id="setting-error-settings_updated" class="updated settings-error">
+                <p>
+                    <strong>Connection Failed</strong>
+                    <br />
+                    ' . $account->errors[0]->code . ' -- ' . $account->errors[0]->message . '
+                </p>
+            </div>
+                        ';
+                    } else {
+                        print_r($account);
+                    }
+
+                    $this->_settings->oauth_token = '';
+                    $this->_settings->oauth_token_secret = '';
+                    $this->_settings->temp = false;
+                    $this->_settings->saveOptions();
+                } else {
+                    // all good
+                    $this->_settings->oauth_token = $token_credentials['oauth_token'];
+                    $this->_settings->oauth_token_secret = $token_credentials['oauth_token_secret'];
+                    $this->_settings->temp = false;
+                    $this->_settings->saveOptions();
+
+//                    print_r($account);
+
+                    echo '
+            <div id="setting-error-settings_updated" class="updated settings-error">
+                <p><strong>Connection OK - Hello ' . ($account->name ? $account->name : $account->screen_name) . '</strong></p>
+            </div>
+                    ';
+                }
             }
-            $connection = new TwitterOAuth(
-                $this->_settings->consumer_key,
-                $this->_settings->consumer_secret,
-                $this->_settings->oauth_token,
-                $this->_settings->oauth_token_secret
-            );
-
-            $token_credentials = $connection->getAccessToken($_REQUEST['oauth_verifier']);
-//            $connection = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, $_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
         }
 
         if ($temp) {
@@ -187,6 +241,9 @@ class barrys_twitter_settings {
         if ($this->consumer_key && $this->consumer_secret) {
             // have basic keys
             if ($this->oauth_token && $this->oauth_token_secret) {
+                if ($this->temp) {
+                    return 2;
+                }
                 // have oauth keys
 
                 // verify then
