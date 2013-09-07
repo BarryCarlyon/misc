@@ -24,6 +24,9 @@ class barrys_twitter {
 
         if (is_admin()) {
             $this->_admin();
+        } else if (isset($_GET['barrys_twitter'])) {
+            // cronism
+            $this->_update_json();
         }
     }
 
@@ -262,9 +265,38 @@ jQuery(document).ready(function() {
     // end
 
     // shell/cron
-    function update_json() {
-        $json_target = wp_upload_dir();
+    function _update_json() {
+        if ($this->_settings->getState() == 3) {
+            $json_target = wp_upload_dir();
+            $target = $json_target['basedir'];
 
+            // suprress the display error
+            $fp = @fopen($target . '/twitter.json', 'w');
+            if ($fp) {
+                $tweet = $this->_settings->account;
+//                print_r($tweet);
+                if (isset($tweet->errors)) {
+                    print_r($tweet->errors);
+                } else {
+                    $tweet = json_encode($tweet);
+                    fwrite($fp, $tweet);
+                    fclose($fp);
+                    echo 'OK';
+                }
+            } else {
+                echo 'Cannot write to ' . $target . '/twitter.json';
+            }
+
+//            if (isset($json_target['error']) && $json_target['error']) {
+//                echo $json_target['error'];
+//            } else {
+//                echo '<pre>';
+//                print_r($json_target);
+//            }
+            exit;
+        } else {
+            echo 'Not configured';
+        }
     }
 }
 
@@ -297,6 +329,15 @@ class barrys_twitter_settings {
         if (isset($this->connection)) {
             unset($this->connection);
         }
+        if (isset($this->id)) {
+            unset($this->id);
+        }
+        if (isset($this->username)) {
+            unset($this->username);
+        }
+        if (isset($this->account)) {
+            unset($this->account);
+        }
         $data = serialize($this);
         update_option('barrys_twitter', $data);
     }
@@ -316,6 +357,7 @@ class barrys_twitter_settings {
                     $this->oauth_token_secret
                 );
                 $account = $this->connection->get('account/verify_credentials');
+                $this->account = $account;
 
                 if (isset($account->errors)) {
                     if (is_admin()) {
