@@ -274,6 +274,10 @@ jQuery(document).ready(function() {
                 foreach ($status->errors as $error) {
                     echo $error->code . ' -- ' . $error->message . '<br />';
                 }
+            } else {
+//                echo 'Tweet sent';
+//                print_r($status);
+                echo $connection->get('statuses/oembed', array('id' => $status->id))->html;
             }
         } else {
             echo 'Unable to send - I am not configured properly';
