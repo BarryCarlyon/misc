@@ -33,6 +33,7 @@ class barrys_twitter {
     private function _admin() {
         add_action('admin_menu', array($this, 'admin_menu'));
         add_action('wp_ajax_barrys_twitter_tweet', array($this, 'send_tweet'));
+        wp_enqueue_script('twitter_widgets', 'https://platform.twitter.com/widgets.js');
     }
 
     function admin_menu() {
@@ -140,12 +141,13 @@ jQuery(document).ready(function() {
             tweet: jQuery('#tweet').val()
         }
 
-        jQuery('#tweet').val('');
+        jQuery('#tweet').val('').attr('disabled', 'disabled');
         jQuery('#tweet_send').val('Sending').attr('disable', 'disable');
 
         jQuery.post(ajaxurl, data, function(resp) {
             jQuery('#tweet_response').html(resp + '<br />' + jQuery('#tweet_response').html());
             jQuery('#tweet_send').val('Tweet').removeAttr('disable');
+            jQuery('#tweet').removeAttr('disable');
         });
     });
 });
@@ -183,7 +185,6 @@ jQuery(document).ready(function() {
                     <input type="button" class="button button-primary" id="tweet_send" value="Tweet" />
                     <br />
                     <div id="tweet_response"></div>
-                    <script type="text/javascript" src="https://platform.twitter.com/widgets.js"></script>
                 </td>
             </tr>
 ';
