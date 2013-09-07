@@ -141,7 +141,6 @@ jQuery(document).ready(function() {
         }
 
         jQuery('#tweet').val('');
-        jQuery('#tweet_response').html('Sending');
 
         jQuery.post(ajaxurl, data, function(resp) {
             jQuery('#tweet_response').html(resp + '<br />' + jQuery('#tweet_response').html());
