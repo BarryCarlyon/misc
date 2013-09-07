@@ -20,6 +20,8 @@ class barrys_twitter {
         }
         $this->_settings = $barrys_twitter;
 
+        include(__DIR__ . '/twitteroauth/twitteroauth.php');
+
         if (is_admin()) {
             $this->_admin();
         }
@@ -34,6 +36,7 @@ class barrys_twitter {
     }
 
     function admin_page() {
+        $action = isset($_REQUEST['action']) ? strtolower($_REQUEST['action']) : false;
         echo '<pre>'.print_r($this->_settings,true).'</pre>';
         if ($_POST) {
             foreach ($this->_settings as $var => $val) {
@@ -46,6 +49,43 @@ class barrys_twitter {
                 <p><strong>Settings saved.</strong></p>
             </div>
             ';
+        }
+
+        // master reset
+        if ($action == 'reset') {
+            $this->_settings->reset();
+        }
+
+        // check for get return keys
+        if ($action == 'callback') {
+            // twitter callback
+            $token = $_GET['oauth_token'];
+            $verify = $_GET['oauth_verifier'];
+
+            if ($this->_settings->oauth_token != $token) {
+                echo '
+            <div id="setting-error-settings_updated" class="updated settings-error">
+                <p><strong>Token Mismatch</strong></p>
+            </div>
+                ';
+            } else {
+
+            }
+            $connection = new TwitterOAuth(
+                $this->_settings->consumer_key,
+                $this->_settings->consumer_secret,
+                $this->_settings->oauth_token,
+                $this->_settings->oauth_token_secret
+            );
+
+            $token_credentials = $connection->getAccessToken($_REQUEST['oauth_verifier']);
+//            $connection = new TwitterOAuth(CONSUMER_KEY, CONSUMER_SECRET, $_SESSION['oauth_token'], $_SESSION['oauth_token_secret']);
+        }
+
+        if ($temp) {
+            $this->_settings->oauth_token = '';
+            $this->_settings->oauth_token_secret = '';
+            $this->_settings->saveOptions();
         }
 
         echo '
@@ -61,8 +101,33 @@ class barrys_twitter {
         $state = $this->_settings->getState();
 
         switch ($state) {
+            case 2:
+                // we got keys build and redirect
+                $connection = new TwitterOAuth($this->_settings->consumer_key, $this->_settings->consumer_secret);
+                $temporary_credentials = $connection->getRequestToken(admin_url('admin.php?page=barrys_twitter&action=callback'));
+                $redirect_url = $connection->getAuthorizeURL($temporary_credentials);
+
+                $this->_settings->oauth_token = $temporary_credentials['oauth_token'];
+                $this->_settings->oauth_token_secret = $temporary_credentials['oauth_token_secret'];
+                $this->_settings->temp = true;
+                $this->_settings->saveOptions();
+
+                echo '
+            <tr valign="top">
+                <td></td>
+                <td>
+                    <a href="' . $redirect_url . '">Authenticate with Twitter</a>
+                </td>
+            </tr>
+';
+
+                break;
             case 1:
                 echo '
+            <tr valign="top">
+                <td></td>
+                <td>Filling this in will send you off to Twitter to Authenticate</td>
+            </tr>
             <tr valign="top">
                 <th scope="row"><label for="consumer_key">Consmer Key</label></th>
                 <td><input type="text" name="consumer_key" id="consumer_key" /></td>
@@ -80,6 +145,7 @@ class barrys_twitter {
         </table>
         <p class="submit">
             <input type="submit" value="Update" class="button button-primary" />
+            <input type="submit" name="action" value="Reset" class="button button-secondary" />
         </p>
     </fieldset>
 </form>
@@ -98,7 +164,19 @@ class barrys_twitter_settings {
 
     var $oauth_token;
     var $oauth_token_secret;
+    var $temp;
 //    var $oauth_verifier;
+
+    var $request_token_url = 'https://api.twitter.com/oauth/request_token';
+    var $authorize_url = 'https://api.twitter.com/oauth/authorize';
+    var $access_token_url = 'https://api.twitter.com/oauth/access_token';
+
+    function reset() {
+        $this->oauth_token = '';
+        $this->oauth_token_secret = '';
+        $this->temp = false;
+        $this->saveOptions();
+    }
 
     function saveOptions() {
         $data = serialize($this);
