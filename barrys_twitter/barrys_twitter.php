@@ -183,7 +183,7 @@ jQuery(document).ready(function() {
                     <input type="button" class="button button-primary" id="tweet_send" value="Tweet" />
                     <br />
                     <div id="tweet_response"></div>
-                    <script type="text/javascript" src="https:////platform.twitter.com/widgets.js"></script>
+                    <script type="text/javascript" src="https://platform.twitter.com/widgets.js"></script>
                 </td>
             </tr>
 ';
