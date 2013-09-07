@@ -22,6 +22,10 @@ class barrys_twitter {
     }
 
     private function _admin() {
+        add_action('admin_menu', array($this, 'admin_menu'));
+    }
+
+    function admin_menu() {
         add_menu_page('Barrys Twitter', 'Barrys Twitter', 'activate_plugins', 'barrys_twitter', array($this, 'admin_page'));
     }
 
