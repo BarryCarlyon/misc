@@ -38,7 +38,7 @@ class barrys_twitter {
 
     function admin_page() {
         $action = isset($_REQUEST['action']) ? strtolower($_REQUEST['action']) : false;
-//        echo '<pre>'.print_r($this->_settings,true).'</pre>';
+
         if ($_POST) {
             foreach ($this->_settings as $var => $val) {
                 $this->_settings->$var = isset($_POST[$var]) ? $_POST[$var] : $val;
@@ -84,7 +84,6 @@ class barrys_twitter {
 
                 // exchange tokens
                 $token_credentials = $connection->getAccessToken($_REQUEST['oauth_verifier']);
-//echo 'making ' . $token_credentials['oauth_token'] . ' ' . $token_credentials['oauth_token_secret'] . '<br />';
 
                 // build
                 $connection = new TwitterOAuth(
@@ -96,7 +95,6 @@ class barrys_twitter {
                 $account = $connection->get('account/verify_credentials');
 
                 if (isset($account->errors)) {
-//                    if ($account->errors[0]->code == 215 || $account->errors[0]->code == 89) {
                         echo '
             <div id="setting-error-settings_updated" class="updated settings-error">
                 <p>
@@ -106,9 +104,6 @@ class barrys_twitter {
                 </p>
             </div>
                         ';
-//                    } else {
-//                        print_r($account);
-//                    }
 
                     $this->_settings->oauth_token = '';
                     $this->_settings->oauth_token_secret = '';
@@ -121,28 +116,14 @@ class barrys_twitter {
                     $this->_settings->temp = false;
                     $this->_settings->saveOptions();
 
-//echo 'saved ' . $token_credentials['oauth_token'] . ' ' . $token_credentials['oauth_token_secret'] . '<br />';
-
                     echo '
             <div id="setting-error-settings_updated" class="updated settings-error">
                 <p><strong>Connection OK - Hello ' . ($account->name ? $account->name : $account->screen_name) . '</strong></p>
             </div>
                     ';
-
-//                    echo '<pre>'.print_r($this->_settings,true).'</pre>';
-
-//                    return;
                 }
             }
         }
-
-/*
-        if ($temp) {
-            $this->_settings->oauth_token = '';
-            $this->_settings->oauth_token_secret = '';
-            $this->_settings->saveOptions();
-        }
-*/
 
 ?>
 <script type="text/javascript">
@@ -222,12 +203,6 @@ jQuery(document).ready(function() {
 
                 break;
             case 1:
-/*
-            <tr valign="top">
-                <td></td>
-                <td>Filling this in will send you off to Twitter to Authenticate</td>
-            </tr>
-*/
                 echo '
             <tr valign="top">
                 <th scope="row"><label for="consumer_key">Consmer Key</label></th>
@@ -275,8 +250,6 @@ jQuery(document).ready(function() {
                     echo $error->code . ' -- ' . $error->message . '<br />';
                 }
             } else {
-//                echo 'Tweet sent';
-//                print_r($status);
                 echo $connection->get('statuses/oembed', array('id' => $status->id))->html;
             }
         } else {
@@ -297,7 +270,6 @@ class barrys_twitter_settings {
     var $oauth_token;
     var $oauth_token_secret;
     var $temp;
-//    var $oauth_verifier;
 
     var $request_token_url = 'https://api.twitter.com/oauth/request_token';
     var $authorize_url = 'https://api.twitter.com/oauth/authorize';
@@ -330,8 +302,6 @@ class barrys_twitter_settings {
                     return 2;
                 }
                 // have oauth keys
-//                echo '<pre>'.print_r($this,true).'</pre>';
-
                 $this->connection = new TwitterOAuth(
                     $this->consumer_key,
                     $this->consumer_secret,
