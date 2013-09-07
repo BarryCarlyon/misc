@@ -10,12 +10,25 @@ Version: 0.0.1
 */
 
 class barrys_twitter {
-    function __constuct() {
+    function __construct() {
         $barrys_twitter = get_option('barrys_twitter', false);
         if (!$barrys_twitter) {
             $barrys_twitter = new barrys_twitter_settings();
         }
+
+        if (is_admin()) {
+            $this->_admin();
+        }
     }
+
+    private function _admin() {
+        add_menu_page('Barrys Twitter', 'Barrys Twitter', 'activate_plugins', 'barrys_twitter', array($this, 'admin_page'));
+    }
+
+    function admin_page() {
+        echo 'hey hey hey';
+    }
+
 }
 
 new barrys_twitter;
