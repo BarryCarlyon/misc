@@ -141,9 +141,11 @@ jQuery(document).ready(function() {
         }
 
         jQuery('#tweet').val('');
+        jQuery('#tweet_send').val('Sending').attr('disable', 'disable');
 
         jQuery.post(ajaxurl, data, function(resp) {
             jQuery('#tweet_response').html(resp + '<br />' + jQuery('#tweet_response').html());
+            jQuery('#tweet_send').val('Tweet').removeAttr('disable');
         });
     });
 });
