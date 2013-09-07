@@ -270,11 +270,13 @@ jQuery(document).ready(function() {
             $connection = $this->_settings->connection;
 
             $status = $connection->post('statuses/update', array('status' => $tweet));
-//            print_r($status);
-//            echo $status;
-            print_r($status);
+            if (isset($status->errors)) {
+                foreach ($status->errors as $error) {
+                    echo $error->code . ' -- ' . $error->message . '<br />';
+                }
+            }
         } else {
-            echo 'Unable to send';
+            echo 'Unable to send - I am not configured properly';
         }
 
         die();
