@@ -183,6 +183,7 @@ jQuery(document).ready(function() {
                     <input type="button" class="button button-primary" id="tweet_send" value="Tweet" />
                     <br />
                     <div id="tweet_response"></div>
+                    <script type="text/javascript" src="https:////platform.twitter.com/widgets.js"></script>
                 </td>
             </tr>
 ';
@@ -258,7 +259,7 @@ jQuery(document).ready(function() {
                     echo $error->code . ' -- ' . $error->message . '<br />';
                 }
             } else {
-                echo $connection->get('statuses/oembed', array('id' => $status->id))->html;
+                echo $connection->get('statuses/oembed', array('id' => $status->id, 'omit_script' => 'true'))->html;
             }
         } else {
             echo 'Unable to send - I am not configured properly';
