@@ -54,6 +54,8 @@ class barrys_twitter {
         // master reset
         if ($action == 'reset') {
             $this->_settings->reset();
+        } else if ($action == 'resetfull') {
+            $this->_settings->reset(true);
         }
 
         // check for get return keys
@@ -81,14 +83,7 @@ class barrys_twitter {
 
                 // exchange tokens
                 $token_credentials = $connection->getAccessToken($_REQUEST['oauth_verifier']);
-
-                // save
-/*
-                $this->_settings->oauth_token = $token_credentials['oauth_token'];
-                $this->_settings->oauth_token_secret = $token_credentials['oauth_token_secret'];
-                $this->_settings->temp = false;
-                $this->_settings->saveOptions();
-*/
+echo 'making ' . $token_credentials['oauth_token'] . ' ' . $token_credentials['oauth_token_secret'] . '<br />';
 
                 // build
                 $connection = new TwitterOAuth(
@@ -125,22 +120,28 @@ class barrys_twitter {
                     $this->_settings->temp = false;
                     $this->_settings->saveOptions();
 
-//                    print_r($account);
+echo 'saved ' . $token_credentials['oauth_token'] . ' ' . $token_credentials['oauth_token_secret'] . '<br />';
 
                     echo '
             <div id="setting-error-settings_updated" class="updated settings-error">
                 <p><strong>Connection OK - Hello ' . ($account->name ? $account->name : $account->screen_name) . '</strong></p>
             </div>
                     ';
+
+                    echo '<pre>'.print_r($this->_settings,true).'</pre>';
+
+//                    return;
                 }
             }
         }
 
+/*
         if ($temp) {
             $this->_settings->oauth_token = '';
             $this->_settings->oauth_token_secret = '';
             $this->_settings->saveOptions();
         }
+*/
 
         echo '
 <div class="wrap">
@@ -155,6 +156,16 @@ class barrys_twitter {
         $state = $this->_settings->getState();
 
         switch ($state) {
+            case 3:
+                echo '
+            <tr valign="top">
+                <td></td>
+                <td>
+                    All is Good<br />Hello ' . $this->_settings->username . '
+                </td>
+            </tr>
+';
+                break;
             case 2:
                 // we got keys build and redirect
                 $connection = new TwitterOAuth($this->_settings->consumer_key, $this->_settings->consumer_secret);
@@ -198,8 +209,15 @@ class barrys_twitter {
         echo '
         </table>
         <p class="submit">
-            <input type="submit" value="Update" class="button button-primary" />
-            <input type="submit" name="action" value="Reset" class="button button-secondary" />
+            ';
+            if ($state != 3) {
+                echo '<input type="submit" value="Update" class="button button-primary" />';
+            }
+            if ($state == 2) {
+                echo '<input type="submit" name="action" value="Reset" class="button button-secondary" />';
+            }
+            echo '
+            <input type="submit" name="action" value="ResetFull" class="button button-secondary" />
         </p>
     </fieldset>
 </form>
@@ -225,7 +243,11 @@ class barrys_twitter_settings {
     var $authorize_url = 'https://api.twitter.com/oauth/authorize';
     var $access_token_url = 'https://api.twitter.com/oauth/access_token';
 
-    function reset() {
+    function reset($full = false) {
+        if ($full) {
+            $this->consumer_key = '';
+            $this->consumer_secret = '';
+        }
         $this->oauth_token = '';
         $this->oauth_token_secret = '';
         $this->temp = false;
@@ -245,6 +267,35 @@ class barrys_twitter_settings {
                     return 2;
                 }
                 // have oauth keys
+                echo '<pre>'.print_r($this,true).'</pre>';
+
+                $connection = new TwitterOAuth(
+                    $this->consumer_key,
+                    $this->consumer_secret,
+                    $this->oauth_token,
+                    $this->oauth_token_secret
+                );
+                $account = $connection->get('account/verify_credentials');
+
+                if (isset($account->errors)) {
+                    if (is_admin()) {
+                        echo '
+            <div id="setting-error-settings_updated" class="updated settings-error">
+                <p>
+                    <strong>Connection Failed at the Test Stage</strong>
+                    <br />
+                    ' . $account->errors[0]->code . ' -- ' . $account->errors[0]->message . '
+                </p>
+            </div>
+                        ';
+                    }
+                    // le fail
+                    return 2;
+                }
+
+                // all good
+                $this->id = $account->id;
+                $this->username = ($account->name ? $account->name : $account->screen_name);
 
                 // verify then
                 return 3;
