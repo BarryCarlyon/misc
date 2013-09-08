@@ -130,7 +130,7 @@ class barrys_twitter {
                 <p><strong>Connection OK - Hello ' . ($account->name ? $account->name : $account->screen_name) . '</strong></p>
             </div>
                     ';
-                    $this->_update_json();
+                    $this->_update_json(true);
                 }
             }
         }
@@ -150,10 +150,7 @@ jQuery(document).ready(function() {
         jQuery('#tweet_send').val('Sending').attr('disabled', 'disabled');
 
         jQuery.post(ajaxurl, data, function(resp) {
-//            console.log(resp);
-//            jQuery('#tweet_response').html(resp.html + '<br />' + jQuery('#tweet_response').html());
             jQuery(resp.html).prependTo('#tweet_response');
-//            jQuery('#tweet_response').html(resp + '<br />' + jQuery('#tweet_response').html());
             jQuery('#tweet_send').val('Tweet').removeAttr('disabled');
             jQuery('#tweet').removeAttr('disabled');
 
@@ -162,13 +159,6 @@ jQuery(document).ready(function() {
     });
 });
 </script>
-<!--
-<div id="test">
-<blockquote class="twitter-tweet"><p>lol</p>&mdash; Barry Carlyon (@BarryCarlyon) <a href="https://twitter.com/BarryCarlyon/statuses/376618435792613376">September 8, 2013</a></blockquote>
-<blockquote class="twitter-tweet"><p>lol</p>&mdash; Barry Carlyon (@BarryCarlyon) <a href="https://twitter.com/BarryCarlyon/statuses/376618435792613376">September 8, 2013</a></blockquote>
-<blockquote class="twitter-tweet"><p>lol</p>&mdash; Barry Carlyon (@BarryCarlyon) <a href="https://twitter.com/BarryCarlyon/statuses/376618435792613376">September 8, 2013</a></blockquote>
-</div>
--->
 <?php
 
         echo '
@@ -206,7 +196,14 @@ jQuery(document).ready(function() {
             </tr>
 ';
                 // force an update
-                $this->_update_json();
+                echo '
+            <tr valign="top">
+                <td>Fetch Status</td>
+                <td>
+                    ' . $this->_update_json(true) . '
+                </td>
+            </tr>
+';
                 break;
             case 2:
                 // we got keys build and redirect
@@ -290,26 +287,37 @@ jQuery(document).ready(function() {
     // end
 
     // shell/cron
-    function _update_json() {
+    function _update_json($admin = false) {
         if ($this->_settings->getState() == 3) {
             $json_target = wp_upload_dir();
             $target = $json_target['basedir'];
+
+            if (is_file($target . '/twitter.json')) {
+                $mtime = filemtime($target . '/twitter.json');
+                if ($mtime > (time() - 60)) {
+                    $r = 'Too Soon';
+                    if ($admin) {
+                        return $r;
+                    }
+                    echo $r;
+                    exit;
+                }
+            }
 
             // suprress the display error
             $fp = @fopen($target . '/twitter.json', 'w');
             if ($fp) {
                 $tweet = $this->_settings->account;
-//                print_r($tweet);
                 if (isset($tweet->errors)) {
-                    print_r($tweet->errors);
+                    $r = print_r($tweet->errors, true);
                 } else {
                     $tweet = json_encode($tweet);
                     fwrite($fp, $tweet);
                     fclose($fp);
-                    echo 'OK';
+                    $r = 'OK';
                 }
             } else {
-                echo 'Cannot write to ' . $target . '/twitter.json';
+                $r = 'Cannot write to ' . $target . '/twitter.json';
             }
 
 //            if (isset($json_target['error']) && $json_target['error']) {
@@ -318,10 +326,14 @@ jQuery(document).ready(function() {
 //                echo '<pre>';
 //                print_r($json_target);
 //            }
-            exit;
         } else {
-            echo 'Not configured';
+            $r = 'Not configured';
         }
+        if ($admin) {
+            return $r;
+        }
+        echo $r;
+        exit;
     }
 }
 
