@@ -109,10 +109,15 @@ class barrys_twitter {
             </div>
                         ';
 
+/*
                     $this->_settings->oauth_token = '';
                     $this->_settings->oauth_token_secret = '';
                     $this->_settings->temp = false;
                     $this->_settings->saveOptions();
+                    */
+                    if ($account->errors[0]->code != 88) {
+                        $this->_settings->reset();
+                    }
                 } else {
                     // all good
                     $this->_settings->oauth_token = $token_credentials['oauth_token'];
@@ -142,16 +147,28 @@ jQuery(document).ready(function() {
         }
 
         jQuery('#tweet').val('').attr('disabled', 'disabled');
-        jQuery('#tweet_send').val('Sending').attr('disable', 'disable');
+        jQuery('#tweet_send').val('Sending').attr('disabled', 'disabled');
 
         jQuery.post(ajaxurl, data, function(resp) {
-            jQuery('#tweet_response').html(resp + '<br />' + jQuery('#tweet_response').html());
-            jQuery('#tweet_send').val('Tweet').removeAttr('disable');
-            jQuery('#tweet').removeAttr('disable');
-        });
+//            console.log(resp);
+//            jQuery('#tweet_response').html(resp.html + '<br />' + jQuery('#tweet_response').html());
+            jQuery(resp.html).prependTo('#tweet_response');
+//            jQuery('#tweet_response').html(resp + '<br />' + jQuery('#tweet_response').html());
+            jQuery('#tweet_send').val('Tweet').removeAttr('disabled');
+            jQuery('#tweet').removeAttr('disabled');
+
+            twttr.widgets.load();
+        }, 'json');
     });
 });
 </script>
+<!--
+<div id="test">
+<blockquote class="twitter-tweet"><p>lol</p>&mdash; Barry Carlyon (@BarryCarlyon) <a href="https://twitter.com/BarryCarlyon/statuses/376618435792613376">September 8, 2013</a></blockquote>
+<blockquote class="twitter-tweet"><p>lol</p>&mdash; Barry Carlyon (@BarryCarlyon) <a href="https://twitter.com/BarryCarlyon/statuses/376618435792613376">September 8, 2013</a></blockquote>
+<blockquote class="twitter-tweet"><p>lol</p>&mdash; Barry Carlyon (@BarryCarlyon) <a href="https://twitter.com/BarryCarlyon/statuses/376618435792613376">September 8, 2013</a></blockquote>
+</div>
+-->
 <?php
 
         echo '
@@ -260,7 +277,9 @@ jQuery(document).ready(function() {
                     echo $error->code . ' -- ' . $error->message . '<br />';
                 }
             } else {
-                echo $connection->get('statuses/oembed', array('id' => $status->id, 'omit_script' => 'true'))->html;
+//                echo $connection->get('statuses/oembed', array('id' => $status->id, 'omit_script' => 'true'))->html;
+                $result = $connection->get('statuses/oembed', array('id' => $status->id, 'omit_script' => 'true'));
+                echo json_encode($result);
             }
         } else {
             echo 'Unable to send - I am not configured properly';
@@ -355,6 +374,7 @@ class barrys_twitter_settings {
                 if ($this->temp) {
                     return 2;
                 }
+
                 // have oauth keys
                 $this->connection = new TwitterOAuth(
                     $this->consumer_key,
@@ -362,8 +382,11 @@ class barrys_twitter_settings {
                     $this->oauth_token,
                     $this->oauth_token_secret
                 );
-                $account = $this->connection->get('account/verify_credentials');
-                $this->account = $account;
+//                $account = $this->connection->get('account/verify_credentials');
+//                $this->account = $account;
+
+//                $rate = $this->connection->get('application/rate_limit_status');
+//                echo '<pre>'.print_r($rate,true).'</pre>';
 
                 if (isset($account->errors)) {
                     if (is_admin()) {
@@ -378,12 +401,12 @@ class barrys_twitter_settings {
                         ';
                     }
                     // le fail
-                    return 2;
+                    return 4;
                 }
 
                 // all good
-                $this->id = $account->id;
-                $this->username = ($account->name ? $account->name : $account->screen_name);
+//                $this->id = $account->id;
+//                $this->username = ($account->name ? $account->name : $account->screen_name);
 
                 // verify then
                 return 3;
