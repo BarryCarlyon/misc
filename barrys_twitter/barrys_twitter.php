@@ -37,7 +37,7 @@ class barrys_twitter {
     }
 
     function admin_menu() {
-        add_menu_page('Barrys Twitter', 'Barrys Twitter', 'activate_plugins', 'barrys_twitter', array($this, 'admin_page'), plugins_url('twitter.ico', __FILE__));
+        add_menu_page('Barrys Twitter', 'Barrys Twitter', 'edit_pages', 'barrys_twitter', array($this, 'admin_page'), plugins_url('twitter.ico', __FILE__));
     }
 
     function admin_page() {
